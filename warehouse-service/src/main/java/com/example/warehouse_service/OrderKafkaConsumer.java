@@ -10,7 +10,7 @@ public class OrderKafkaConsumer {
     private static final Logger log = LoggerFactory.getLogger(OrderKafkaConsumer.class);
 
     @KafkaListener(topics = "orders", groupId = "warehouse-group")
-    public void consumeOrder(Order order) {
+    public void consumeOrder(String  order) {
         log.info("Received order: order={}", order);
     }
 }

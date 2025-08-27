@@ -1,7 +1,10 @@
 package com.example.warehouse_service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.common.serialization.Deserializer;
+import org.apache.kafka.common.serialization.Serializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,22 +22,26 @@ import java.util.Map;
 public class KafkaConsumerConfig {
 
     @Bean
-    public ConsumerFactory<String,  Order> consumerFactory(
+    public ConsumerFactory<String, Order> consumerFactory(
             ObjectMapper objectMapper
     ) {
-
-
         Map<String, Object> properties = new HashMap<>();
         properties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
         properties.put(ConsumerConfig.GROUP_ID_CONFIG, "warehouse-group");
 
-        JsonDeserializer<Order> jsonDeserializer = new JsonDeserializer<>(Order.class, objectMapper);
-        jsonDeserializer.setUseTypeHeaders(false);
+
+        Deserializer<Order> deserializer = (s, bytes) -> {
+            try {
+                return objectMapper.readValue(s, Order.class);
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException(e);
+            }
+        };
 
         return new DefaultKafkaConsumerFactory<>(
                 properties,
                 new StringDeserializer(),
-                jsonDeserializer
+                deserializer
         );
     }
 
